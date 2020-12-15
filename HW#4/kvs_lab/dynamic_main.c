@@ -1,12 +1,48 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <dlfcn.h>
 #include "kvs.h"
-
-extern kvs_t* open();
-extern int close(kvs_t* kvs);
-extern int put(kvs_t* kvs, const char* key, const char* value);
-extern char* get(kvs_t* kvs, const char* key);
 
 int main()
 {
+
+	void *handle;
+	kvs_t* (*open)();
+	int (*close)(kvs_t *);
+	int (*put)(kvs_t *, const char *, const char *);
+	char* (*get)(kvs_t *, const char *);
+	char *error;
+	
+	handle = dlopen("./libkvs.so", RTLD_LAZY);
+	if(!handle){
+		fprintf(stderr, "%s\n", dlerror());
+		exit(1);
+	}
+
+	open = (kvs_t* (*)())dlsym(handle, "open");
+	if ((error = dlerror()) != NULL){
+		fprintf(stderr, "%s\n", error);
+		exit(1);
+	}
+
+	close = (int(*)(kvs_t *))dlsym(handle, "close");
+	if ((error = dlerror()) != NULL){
+		fprintf(stderr, "%s\n", error);
+		exit(1);
+	}
+
+	put = (int(*)(kvs_t *, const char *, const char *))dlsym(handle, "put");
+	if ((error = dlerror()) != NULL){
+		fprintf(stderr, "%s\n", error);
+		exit(1);
+	}
+
+	get = (char*(*)(kvs_t *, const char *))dlsym(handle, "get");
+	if ((error = dlerror()) != NULL){
+		fprintf(stderr, "%s\n", error);
+		exit(1);
+	}
+
 	// 1. create KVS
 
 	kvs_t* kvs = open();
@@ -67,6 +103,11 @@ int main()
 	free(keys);
 	free(value);
 	close(kvs);
+
+	if (dlclose(handle) < 0){
+		fprintf(stderr, "%s\n", dlerror());
+		exit(1);
+	}
 
 	return 0;
 }

@@ -8,6 +8,7 @@ CC = gcc
 OPTS = -Wall -O
 OPTS2 = -Wall -DRUNTIME -shared -fpic -o
 LIBS = -L. -lkvs
+LIBS2 = -ldl
 
 OBJS = $(SRCS:.c=.o)
 OBJS2 = $(SRCS2:.c=.o)
@@ -31,12 +32,8 @@ $(LARS) : $(LOBJS)
 
 dynamic: $(TARG2)
 
-	LD_LIBRARY_PATH=/user/local/lib:$(PWD)
-
-	export LD_LIBRARY_PATH
-
 $(TARG2) : $(LARS2)
-	$(CC) $(OPTS) -o $(TARG2) $(SRCS2) $(LIBS)
+	$(CC) -o $(TARG2) $(SRCS2) $(LIBS2)
 
 $(LARS2) :
 	$(CC) $(OPTS2) $(LARS2) $(LIBSRCS)
@@ -44,5 +41,4 @@ $(LARS2) :
 clean:
 	rm -f $(OBJS) $(LOBJS) $(LARS) $(TARG) 
 	rm -f $(OBJS2) $(LARS2) $(TARG2)
-	unset LD_LIBRARY_PATH
 
